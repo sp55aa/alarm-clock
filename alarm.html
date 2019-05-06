@@ -1,0 +1,107 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>闹钟</title>
+<script language="javascript">
+if (Notification)
+    Notification.requestPermission(
+        function(status) {
+            if (Notification.permission != status)
+                Notification.permission = status;
+        });
+var uid = 0;
+function $(id)
+{
+    return document.getElementById(id);
+}
+function getCookie(name, value0) {
+    var cookie = " " + document.cookie;
+    var start_ = cookie.indexOf(" " + name + "=");
+    if (start_ == -1)
+        return value0;
+    else {
+        start = cookie.indexOf("=", start_) + 1;
+        var end = cookie.indexOf(";", start);
+        if (end == -1)
+            end = cookie.length;
+        return unescape(cookie.substring(start, end));
+    }
+}
+function setCookie(name, value)
+{
+    document.cookie = name + "=" + escape(value);
+}
+function timeout_cb(id)
+{
+    var node = $(id);
+    if (Notification && Notification.permission == "granted") {
+        var options={
+            icon: "https://test.tim.qq.com/alarm_logo.png",
+            image: "https://test.tim.qq.com/alarm_image.jpg",
+            requireInteraction: true,
+            body: node.innerHTML
+        };
+        var notify = new Notification("闹钟", options)
+        notify.onclick = function(){this.close()}
+    } else {
+        alert(node.message);
+    }
+    $('clocks').removeChild(node);
+}
+function add0(n)
+{
+    if (n < 10)
+        return "0" + n;
+    else
+        return n;
+}
+function setclock(timeout, msg)
+{
+    var node = document.createElement("li");
+
+    node.id = "clock_" + uid++;
+    node.message = msg;
+
+    var timeoutMS = timeout * 60000;
+    var t = new Date();
+    t.setTime(t.getTime() + timeoutMS);
+    node.innerHTML = add0(t.getHours()) + ":" +
+                     add0(t.getMinutes()) + ":" +
+                     add0(t.getSeconds()) + ", " + msg;
+
+    $('clocks').appendChild(node);
+    setTimeout("timeout_cb('"+node.id+"')", timeoutMS);
+}
+function sync_cookie()
+{
+    setCookie("timeout", $('timeout').value);
+    setCookie("message", $('message').value);
+}
+function load_cookie()
+{
+    $('timeout').value = getCookie("timeout", $('timeout').value);
+    $('message').value = getCookie("message", $('message').value);
+}
+function init()
+{
+    load_cookie();
+    
+    $('timeout').onkeydown = $('message').onkeydown =
+        function(e) {
+            var keypressed = event.keyCode || event.which;
+            if (keypressed == 13)
+                setclock($('timeout').value, $('message').value);
+        };
+}
+</script>
+</head>
+<body onload="init()">
+<input id="timeout" type="text" oninput="sync_cookie()" value="10" onfocus="this.select()" autofocus />分钟后提醒我
+<input id="message" type="text" oninput="sync_cookie()" value="时间到了" onfocus="this.select()" />
+<input type="button" value="添加闹钟" onclick="setclock($('timeout').value, $('message').value)" />
+<input type="button" value="添加闹钟(5分钟)" onclick="setclock(5, $('message').value)" />
+<input type="button" value="添加闹钟(20分钟)" onclick="setclock(20, $('message').value)" />
+<ul id="clocks">
+</ul>
+</body>
